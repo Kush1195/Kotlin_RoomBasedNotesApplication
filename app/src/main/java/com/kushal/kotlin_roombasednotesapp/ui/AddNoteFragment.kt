@@ -1,13 +1,12 @@
 package com.kushal.kotlin_roombasednotesapp.ui
 
+import android.app.AlertDialog
 import android.content.Context
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.navigation.Navigation
 import com.kushal.kotlin_roombasednotesapp.R
@@ -19,11 +18,7 @@ import kotlinx.coroutines.launch
 class AddNoteFragment : BaseFragment() {
 
     lateinit var mContext: Context
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
+    private var note : Note? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,6 +26,7 @@ class AddNoteFragment : BaseFragment() {
         savedInstanceState: Bundle?
     ): View? {
 
+        setHasOptionsMenu(true)
         val view = inflater.inflate(R.layout.fragment_add_note, container, false)
         mContext = requireContext()
         return view
@@ -38,6 +34,15 @@ class AddNoteFragment : BaseFragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        arguments?.let {
+
+            note = AddNoteFragmentArgs.fromBundle(it).note
+
+            edit_text_title.setText(note?.title)
+            edit_text_note.setText(note?.note)
+
+        }
 
         button_save.setOnClickListener {
 
@@ -58,10 +63,16 @@ class AddNoteFragment : BaseFragment() {
 
             launch {
 
-                val note = Note(noteTitle, noteBody)
+                val mNote = Note(noteTitle, noteBody)
 
-                NoteDatabase(mContext).getNoteDao().addNote(note)
-                Toast.makeText(mContext, "Note Saved", Toast.LENGTH_LONG).show()
+                if (note == null) {
+                    NoteDatabase(mContext).getNoteDao().addNote(mNote)
+                    Toast.makeText(mContext, "Note Saved", Toast.LENGTH_LONG).show()
+                } else {
+                    mNote.id = note!!.id
+                    NoteDatabase(mContext).getNoteDao().updateNote(mNote)
+                    Toast.makeText(mContext, "Note Updated", Toast.LENGTH_LONG).show()
+                }
 
                 Handler().postDelayed(Runnable {
 
@@ -75,6 +86,46 @@ class AddNoteFragment : BaseFragment() {
 
         }
 
+    }
+
+    @Override
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        when(item.itemId) {
+            R.id.delete ->
+                if (note != null) {
+                    deleteNote()
+                } else {
+                    Toast.makeText(mContext, "Can Not Delete Before Save...", Toast.LENGTH_SHORT).show()
+                }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun deleteNote() {
+
+        AlertDialog.Builder(mContext).apply {
+            setTitle("Are You Sure?")
+            setMessage("You Can Not Undo This Operation")
+            setPositiveButton("Yes"){_,_->
+                launch {
+
+                    NoteDatabase(mContext).getNoteDao().deleteNote(note!!)
+                    val action = AddNoteFragmentDirections.actionSaveNote()
+                    Navigation.findNavController(requireView()).navigate(action)
+
+                }
+            }
+            setNegativeButton("No"){_,_->
+
+            }
+        }.create().show()
+    }
+
+    @Override
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.menu, menu)
     }
 
 

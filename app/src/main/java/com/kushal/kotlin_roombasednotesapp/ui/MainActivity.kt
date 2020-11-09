@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        mContext = this;
+        mContext = this
         init()
     }
 
@@ -27,4 +27,7 @@ class MainActivity : AppCompatActivity() {
         return NavigationUI.navigateUp(Navigation.findNavController(this, R.id.fragment), null)
     }
 
+    override fun onBackPressed() {
+        finishAffinity()
+    }
 }

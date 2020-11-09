@@ -21,7 +21,6 @@ class HomeFragment : BaseFragment() {
     lateinit var mContext: Context
     lateinit var button_add: FloatingActionButton
 
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
@@ -56,5 +55,7 @@ class HomeFragment : BaseFragment() {
         }
 
     }
+
+
 
 }
